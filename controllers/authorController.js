@@ -9,3 +9,12 @@ exports.createAuthor = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+exports.getAuthors = async (req, res) => {
+  try {
+    const authors = await Author.find();
+    res.json(authors);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
