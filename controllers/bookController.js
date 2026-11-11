@@ -45,7 +45,44 @@ exports.createBook = async (req, res) => {
 
 exports.getBooks = async (req, res) => {
   try {
-    const books = await Book.find().populate('author');
+    const { genre, author, minPrice, maxPrice, search, sort, order } = req.query;
+    const filter = {};
+
+    if (genre) {
+      filter.genre = { $regex: `^${escapeRegex(genre)}$`, $options: 'i' };
+    }
+    if (author) {
+      if (!mongoose.isValidObjectId(author)) {
+        return res.status(400).json({ error: 'author must be a valid id' });
+      }
+      filter.author = author;
+    }
+    if (search) {
+      filter.title = { $regex: escapeRegex(search), $options: 'i' };
+    }
+
+    const priceFilter = {};
+    if (minPrice !== undefined) priceFilter.$gte = Number(minPrice);
+    if (maxPrice !== undefined) priceFilter.$lte = Number(maxPrice);
+    if (Object.values(priceFilter).some(Number.isNaN)) {
+      return res.status(400).json({ error: 'minPrice and maxPrice must be numbers' });
+    }
+    if (Object.keys(priceFilter).length > 0) {
+      filter.price = priceFilter;
+    }
+
+    const allowedSorts = ['price', 'title', 'publishedYear'];
+    const sortOption = {};
+    if (sort) {
+      if (!allowedSorts.includes(sort)) {
+        return res
+          .status(400)
+          .json({ error: `sort must be one of: ${allowedSorts.join(', ')}` });
+      }
+      sortOption[sort] = order === 'desc' ? -1 : 1;
+    }
+
+    const books = await Book.find(filter).sort(sortOption).populate('author');
     res.json(books);
   } catch (err) {
     res.status(500).json({ error: err.message });
