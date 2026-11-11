@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Book = require('../models/Book');
 const Author = require('../models/Author');
+const { checkPriceAndYear } = require('../utils/bookRules');
 
 exports.createBook = async (req, res) => {
   try {
@@ -11,6 +12,10 @@ exports.createBook = async (req, res) => {
     const authorExists = await Author.findById(author);
     if (!authorExists) {
       return res.status(400).json({ error: 'Author does not exist' });
+    }
+    const ruleError = checkPriceAndYear(req.body);
+    if (ruleError) {
+      return res.status(422).json({ error: ruleError });
     }
     const book = await Book.create(req.body);
     res.status(201).json(book);
@@ -56,6 +61,10 @@ exports.updateBook = async (req, res) => {
       if (!authorExists) {
         return res.status(400).json({ error: 'Author does not exist' });
       }
+    }
+    const ruleError = checkPriceAndYear(req.body);
+    if (ruleError) {
+      return res.status(422).json({ error: ruleError });
     }
     const book = await Book.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
