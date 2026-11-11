@@ -33,3 +33,21 @@ exports.getAuthorById = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.updateAuthor = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ error: 'Author not found' });
+    }
+    const author = await Author.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!author) {
+      return res.status(404).json({ error: 'Author not found' });
+    }
+    res.json(author);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
