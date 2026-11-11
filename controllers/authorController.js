@@ -90,3 +90,40 @@ exports.deleteAuthor = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getAuthorStats = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ error: 'Author not found' });
+    }
+    const author = await Author.findById(req.params.id);
+    if (!author) {
+      return res.status(404).json({ error: 'Author not found' });
+    }
+
+    const books = await Book.find({ author: author._id });
+    const priced = books.filter((book) => typeof book.price === 'number');
+
+    let averagePrice = 0;
+    let cheapestBook = null;
+    let mostExpensiveBook = null;
+
+    if (priced.length > 0) {
+      const total = priced.reduce((sum, book) => sum + book.price, 0);
+      averagePrice = Math.round((total / priced.length) * 100) / 100;
+      const byPrice = [...priced].sort((a, b) => a.price - b.price);
+      cheapestBook = byPrice[0].title;
+      mostExpensiveBook = byPrice[byPrice.length - 1].title;
+    }
+
+    res.json({
+      author: author.name,
+      bookCount: books.length,
+      averagePrice,
+      cheapestBook,
+      mostExpensiveBook,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
