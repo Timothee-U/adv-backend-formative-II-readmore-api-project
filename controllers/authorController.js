@@ -68,3 +68,25 @@ exports.getBooksByAuthor = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.deleteAuthor = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ error: 'Author not found' });
+    }
+    const author = await Author.findById(req.params.id);
+    if (!author) {
+      return res.status(404).json({ error: 'Author not found' });
+    }
+    const bookCount = await Book.countDocuments({ author: author._id });
+    if (bookCount > 0) {
+      return res.status(409).json({
+        error: `Cannot delete author: they still have ${bookCount} book(s). Delete or reassign the books first.`,
+      });
+    }
+    await author.deleteOne();
+    res.json({ message: 'Author deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
