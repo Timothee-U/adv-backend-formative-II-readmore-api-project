@@ -10,7 +10,7 @@ exports.createBook = async (req, res) => {
     }
     const authorExists = await Author.findById(author);
     if (!authorExists) {
-      return res.status(404).json({ error: 'Author not found' });
+      return res.status(400).json({ error: 'Author does not exist' });
     }
     const book = await Book.create(req.body);
     res.status(201).json(book);
@@ -54,7 +54,7 @@ exports.updateBook = async (req, res) => {
       }
       const authorExists = await Author.findById(req.body.author);
       if (!authorExists) {
-        return res.status(404).json({ error: 'Author not found' });
+        return res.status(400).json({ error: 'Author does not exist' });
       }
     }
     const book = await Book.findByIdAndUpdate(req.params.id, req.body, {
