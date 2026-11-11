@@ -42,3 +42,45 @@ exports.getBookById = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.updateBook = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+    if (req.body.author) {
+      if (!mongoose.isValidObjectId(req.body.author)) {
+        return res.status(400).json({ error: 'Invalid author id' });
+      }
+      const authorExists = await Author.findById(req.body.author);
+      if (!authorExists) {
+        return res.status(404).json({ error: 'Author not found' });
+      }
+    }
+    const book = await Book.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    }).populate('author');
+    if (!book) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+    res.json(book);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+exports.deleteBook = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+    const book = await Book.findByIdAndDelete(req.params.id);
+    if (!book) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+    res.json({ message: 'Book deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
