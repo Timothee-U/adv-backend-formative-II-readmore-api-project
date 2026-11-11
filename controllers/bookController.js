@@ -82,8 +82,15 @@ exports.getBooks = async (req, res) => {
       sortOption[sort] = order === 'desc' ? -1 : 1;
     }
 
-    const books = await Book.find(filter).sort(sortOption).populate('author');
-    res.json(books);
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+    const total = await Book.countDocuments(filter);
+    const results = await Book.find(filter)
+      .sort(sortOption)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('author');
+    res.json({ page, limit, total, results });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
