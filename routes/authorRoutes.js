@@ -5,11 +5,13 @@ const {
   getAuthors,
   getAuthorById,
   updateAuthor,
+  getBooksByAuthor,
 } = require('../controllers/authorController');
 
 router.post('/', createAuthor);
 router.get('/', getAuthors);
 router.get('/:id', getAuthorById);
 router.put('/:id', updateAuthor);
+router.get('/:id/books', getBooksByAuthor);
 
 module.exports = router;
